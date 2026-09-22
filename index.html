@@ -3,110 +3,159 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aba 2.0 - Igreja Missionária</title>
+  <title>Aba 2.0 - Igreja Missionária de Itagimirim</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
-  <div class="game-viewport">
+  <div class="app-wrapper">
     
-    <!-- Top Right Links -->
-    <header class="top-bar">
-      <div class="top-link" onclick="switchTab('midia')">Online Shop</div>
-      <div class="top-link" onclick="switchTab('membros')">Friends</div>
+    <!-- Top Header -->
+    <header class="hud-header">
+      <div class="hud-logo-banner" onclick="switchTab('lobby')">
+        <h1>ABA <span>2.0</span></h1>
+      </div>
+      <nav class="hud-top-nav">
+        <button class="top-btn" onclick="switchTab('midia')">Online Lives</button>
+        <button class="top-btn" onclick="switchTab('membros')">Membros</button>
+        <button id="adminBadgeBtn" class="top-btn" style="display:none; background:var(--accent-red);" onclick="toggleAdminRole()">Modo: Admin</button>
+      </nav>
     </header>
 
-    <!-- Central Interactive Area -->
-    <main class="main-canvas">
+    <!-- Main Stage -->
+    <main class="main-stage">
       
-      <!-- Slanted Left Navigation -->
-      <nav class="sidebar-menu">
-        <div class="logo-container">
-          ABA <span>2.0</span>
+      <!-- Slanted Low-Poly Menu -->
+      <aside class="poly-sidebar">
+        <div class="poly-menu-item active" id="menu-lobby" onclick="switchTab('lobby')">
+          <span class="check-badge">✓</span>
+          <span>Lobby Principal</span>
+        </div>
+        <div class="poly-menu-item" id="menu-historia" onclick="switchTab('historia')">
+          <span class="check-badge">✓</span>
+          <span>1. Nossa História</span>
+        </div>
+        <div class="poly-menu-item" id="menu-feed" onclick="switchTab('feed')">
+          <span class="check-badge">✓</span>
+          <span>2. Feed Social</span>
+        </div>
+        <div class="poly-menu-item" id="menu-agenda" onclick="switchTab('agenda')">
+          <span class="check-badge">✓</span>
+          <span>3. Agenda & Escalas</span>
+        </div>
+        <div class="poly-menu-item" id="menu-chamada" onclick="switchTab('chamada')">
+          <span class="check-badge">✓</span>
+          <span>4. Chamada & PDF</span>
+        </div>
+        <div class="poly-menu-item" id="menu-admin" onclick="switchTab('admin')">
+          <span class="check-badge">✓</span>
+          <span>5. Painel Admin</span>
+        </div>
+      </aside>
+
+      <!-- Viewport de Telas -->
+      <section class="content-viewport">
+        
+        <!-- LOBBY PRINCIPAL (TELA OBRIGATÓRIA ANTES DE NAVEGAR) -->
+        <div id="view-lobby" class="view-panel active">
+          <h2 style="font-size: 2rem; letter-spacing: 2px; text-transform: uppercase;">Portal de Entrada / Lobby</h2>
+          <p style="color: var(--gray-sub);">Selecione um dos módulos para acessar o conteúdo:</p>
+
+          <div class="lobby-grid">
+            <div class="lobby-card" onclick="switchTab('historia')">
+              <h3>1. Nossa História</h3>
+              <p>Conheça as origens da IMUB e a visão em Itagimirim.</p>
+            </div>
+            <div class="lobby-card" onclick="switchTab('feed')">
+              <h3>2. Feed Social</h3>
+              <p>Acompanhe publicações, curta e interaja com a igreja.</p>
+            </div>
+            <div class="lobby-card" onclick="switchTab('agenda')">
+              <h3>3. Agenda & Escalas</h3>
+              <p>Programação dos cultos, voluntários e avisos.</p>
+            </div>
+            <div class="lobby-card" onclick="switchTab('chamada')">
+              <h3>4. Chamada & PDF</h3>
+              <p>Controle de presença e exportação de relatórios.</p>
+            </div>
+          </div>
         </div>
 
-        <div class="menu-item active" onclick="switchTab('feed')">
-          <span class="icon-check">✓</span>
-          <span>Race / Feed</span>
+        <!-- ABA 1: HISTÓRIA DA IGREJA (COM CRUD PARA ADMIN) -->
+        <div id="view-historia" class="view-panel">
+          <h2 style="font-size: 2rem; letter-spacing: 2px; text-transform: uppercase;">História da IMUB Itagimirim</h2>
+
+          <!-- Formulário do Admin para postar nova parte da história -->
+          <div id="adminHistoryForm" class="create-post-card" style="display:none;">
+            <h3 style="text-transform:uppercase;">[ADMIN] Adicionar Novo Capítulo/Texto</h3>
+            <input type="text" id="historyTitle" class="post-input" placeholder="Título da Seção (ex: Origens em 1955)" style="min-height:40px;">
+            <textarea id="historyBody" class="post-input" placeholder="Escreva o texto da história..."></textarea>
+            <button class="btn-hud" onclick="saveHistoryText()">Publicar Capítulo</button>
+          </div>
+
+          <!-- Container onde os textos da história são listados -->
+          <div id="historyList">
+            <p style="color: var(--gray-sub);">Carregando história da igreja...</p>
+          </div>
         </div>
 
-        <div class="menu-item" onclick="switchTab('agenda')">
-          <span class="icon-check">✓</span>
-          <span>Customize</span>
+        <!-- ABA 2: FEED SOCIAL -->
+        <div id="view-feed" class="view-panel">
+          <div class="create-post-card">
+            <textarea id="postText" class="post-input" placeholder="Compartilhe uma palavra ou testemunho..."></textarea>
+            <div class="post-actions-bar">
+              <label class="file-upload-btn">
+                Anexar Mídia
+                <input type="file" id="mediaInput" accept="image/*,video/*" style="display:none">
+              </label>
+              <button class="btn-hud" onclick="publishPost()">Publicar</button>
+            </div>
+          </div>
+          <div id="timelineList"></div>
         </div>
 
-        <div class="menu-item" onclick="switchTab('chamada')">
-          <span class="icon-check">✓</span>
-          <span>Settings</span>
+        <!-- ABA 3: AGENDA -->
+        <div id="view-agenda" class="view-panel">
+          <div class="create-post-card">
+            <h2>Agenda Semanal</h2>
+            <p style="color:var(--gray-sub);">Cultos aos Domingos (19h), Quarta-feira (19h30) e Sábados (19h).</p>
+          </div>
         </div>
 
-        <div class="menu-item" onclick="switchTab('membros')">
-          <span class="icon-check">✓</span>
-          <span>Multiplayer</span>
+        <!-- ABA 4: CHAMADA -->
+        <div id="view-chamada" class="view-panel">
+          <div class="create-post-card">
+            <h2>Registro de Presença</h2>
+            <p style="color:var(--gray-sub);">Gestão e relatórios da Igreja Missionária Unida de Itagimirim.</p>
+          </div>
         </div>
 
-        <div class="menu-item" onclick="switchTab('admin')">
-          <span class="icon-check">✓</span>
-          <span>Quit / Admin</span>
+        <!-- ABA 5: ADMIN -->
+        <div id="view-admin" class="view-panel">
+          <div class="create-post-card">
+            <h2>Painel Administrativo</h2>
+            <p style="color:var(--gray-sub);">Gerenciamento geral de permissões e acessos.</p>
+          </div>
         </div>
-      </nav>
 
-      <!-- Content Panels -->
-      <section id="panel-feed" class="content-display active">
-        <div class="content-box">
-          <h2>Feed & Publicações</h2>
-          <div id="feedList" style="margin-top: 20px;">Carregando publicações...</div>
-        </div>
       </section>
-
-      <section id="panel-agenda" class="content-display">
-        <div class="content-box">
-          <h2>Agenda & Escalas</h2>
-          <p style="margin-top: 15px; color: var(--text-gray);">Programação semanal dos cultos e eventos.</p>
-        </div>
-      </section>
-
-      <section id="panel-chamada" class="content-display">
-        <div class="content-box">
-          <h2>Registro de Presença</h2>
-          <p style="margin-top: 15px; color: var(--text-gray);">Painel de controlo de membros e visitantes.</p>
-        </div>
-      </section>
-
-      <section id="panel-membros" class="content-display">
-        <div class="content-box">
-          <h2>Membros & Ministérios</h2>
-          <p style="margin-top: 15px; color: var(--text-gray);">Lista de departamentos e liderança.</p>
-        </div>
-      </section>
-
-      <section id="panel-admin" class="content-display">
-        <div class="content-box">
-          <h2>Painel Administrativo</h2>
-          <p style="margin-top: 15px; color: var(--text-gray);">Gestão de acessos e permissões.</p>
-        </div>
-      </section>
-
     </main>
 
-    <!-- Bottom Slanted News Feed Bar -->
-    <footer class="bottom-banner">
-      <div class="news-label">News Feed</div>
-      <div class="news-cards-container">
-        <div class="news-card" onclick="switchTab('feed')">
-          <h4>Sample News Title #1</h4>
-          <p>Avisos e novidades da comunidade...</p>
+    <!-- BARRA DE NOTÍCIAS NO LOBBY (RODAPÉ) -->
+    <footer class="hud-news-banner">
+      <div class="news-tag">News Feed</div>
+      <div class="news-cards-grid" id="newsFeedList">
+        <div class="news-item-card" onclick="switchTab('historia')">
+          <h4>História da IMUB</h4>
+          <p>Confira a visão e trajetória em Itagimirim.</p>
         </div>
-        <div class="news-card" onclick="switchTab('agenda')">
-          <h4>Sample News Title #2</h4>
-          <p>Próximo culto de celebração este domingo...</p>
-        </div>
-        <div class="news-card" onclick="switchTab('midia')">
-          <h4>Sample News Title #3</h4>
-          <p>Transmissões ao vivo e gravações...</p>
+        <div class="news-item-card" onclick="switchTab('agenda')">
+          <h4>Próximo Encontro</h4>
+          <p>Acompanhe a programação oficial dos cultos.</p>
         </div>
       </div>
     </footer>
