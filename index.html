@@ -2,223 +2,116 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Aba 2.0 - Igreja Missionária de Itagimirim</title>
-
-  <link rel="icon" type="image/png" href="aba.png">
-  <link rel="apple-touch-icon" href="aba.png">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d1117">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aba 2.0 - Igreja Missionária</title>
   <link rel="stylesheet" href="style.css">
-
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
-  <header class="app-header">
-    <div class="brand-wrapper">
-      <div class="brand-avatar">
-        <img src="aba.png" alt="Logo" onerror="this.style.display='none';">
-      </div>
-      <div class="brand-title">Aba <span>2.0</span></div>
-    </div>
+  <div class="game-viewport">
     
-    <div id="headerProfileArea" style="display:none;">
-      <button class="user-quick-profile" onclick="switchView('viewPerfil')">
-        <span id="txtHeaderUserName">Membro</span>
-        <i data-lucide="user-circle"></i>
-      </button>
-    </div>
-  </header>
+    <!-- Top Right Links -->
+    <header class="top-bar">
+      <div class="top-link" onclick="switchTab('midia')">Online Shop</div>
+      <div class="top-link" onclick="switchTab('membros')">Friends</div>
+    </header>
 
-  <main class="app-container">
-
-    <section id="viewAuth" class="view-panel active">
-      <div class="card" style="max-width: 380px; margin: 40px auto;">
-        <h2 style="color:var(--text-heading); text-align:center; margin-bottom:6px;">Acessar o Aba</h2>
-        <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:20px;">Igreja Missionária de Itagimirim</p>
-
-        <form onsubmit="handleAuthSubmit(event)">
-          <div class="form-group" id="groupNome" style="display:none; margin-bottom:12px;">
-            <label style="font-size:0.8rem; color:var(--text-muted);">Nome Completo</label>
-            <input type="text" id="iptNome" class="form-control" placeholder="Digite seu nome">
-          </div>
-          <div class="form-group" style="margin-bottom:12px;">
-            <label style="font-size:0.8rem; color:var(--text-muted);">E-mail</label>
-            <input type="email" id="iptEmail" class="form-control" required placeholder="seu@email.com">
-          </div>
-          <div class="form-group" style="margin-bottom:18px;">
-            <label style="font-size:0.8rem; color:var(--text-muted);">Senha</label>
-            <input type="password" id="iptSenha" class="form-control" required placeholder="******">
-          </div>
-          <button type="submit" id="btnSubmitAuth" class="btn btn-primary" style="width:100%;">Entrar</button>
-        </form>
-
-        <p style="text-align:center; margin-top:16px; font-size:0.82rem; color:var(--text-muted);">
-          <span id="txtToggleAuth">Ainda não tem conta? <a href="#" onclick="toggleAuthMode(true)" style="color:var(--accent-blue);">Cadastre-se</a></span>
-        </p>
-      </div>
-    </section>
-
-    <section id="viewFeed" class="view-panel">
-      <div class="timeline-switcher">
-        <button class="timeline-btn active" id="tabForYou" onclick="setTimelineMode('foryou')">Para Você</button>
-        <button class="timeline-btn" id="tabSeguindo" onclick="setTimelineMode('seguindo')">Seguindo</button>
-      </div>
-
-      <div class="card">
-        <textarea id="iptPostContent" class="form-control" placeholder="Compartilhe uma palavra, versículo ou testemunho..."></textarea>
-        <div style="text-align:right; margin-top:10px;">
-          <button class="btn btn-primary" onclick="createPost()"><i data-lucide="send"></i> Publicar</button>
-        </div>
-      </div>
-
-      <div id="feedPostsList">
-        <div class="card" style="text-align:center; color:var(--text-muted);">Carregando feed...</div>
-      </div>
-    </section>
-
-    <section id="viewCalendario" class="view-panel">
-      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
-
-      <div class="card">
-        <h3 style="color:var(--accent-yellow); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-          <i data-lucide="calendar"></i> AgendaSemanal
-        </h3>
-        <ul style="line-height:2; color:var(--text-main); font-size:0.9rem; list-style:none;">
-          <li style="border-bottom:1px solid var(--border-color); padding:8px 0;"><strong>🗓️ Domingo - 19:00:</strong> Culto de Celebração & Família</li>
-          <li style="border-bottom:1px solid var(--border-color); padding:8px 0;"><strong>🗓️ Quarta-feira - 19:30:</strong> Culto de Doutrina e Oração</li>
-          <li style="padding:8px 0;"><strong>🗓️ Sábado - 19:00:</strong> Encontro dos Jovens e Adolescentes</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3 style="color:var(--accent-blue); margin-bottom:12px;"><i data-lucide="users"></i> Escala de Servidores</h3>
-        <div style="font-size:0.9rem; line-height:1.8; color:var(--text-main);">
-          <p><strong>Louvor:</strong> Ministério Alpha</p>
-          <p><strong>Mídia & Som:</strong> Gabriel & Equipe</p>
-          <p><strong>Recepção:</strong> Irmãs Voluntárias</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="viewMidia" class="view-panel">
-      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
-      <div class="card">
-        <h3 style="color:var(--accent-red); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-          <i data-lucide="radio"></i> Culto Ao Vivo
-        </h3>
-        <div class="responsive-video">
-          <iframe src="https://www.youtube.com/embed/live_stream?channel=UC_SEUCHANNEL_ID" allowfullscreen></iframe>
-        </div>
-        <p style="font-size:0.85rem; color:var(--text-muted);">Assista às nossas transmissões em tempo real diretamente de Itagimirim.</p>
-      </div>
-    </section>
-
-    <section id="viewChamada" class="view-panel">
-      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
+    <!-- Central Interactive Area -->
+    <main class="main-canvas">
       
-      <div class="card">
-        <h3 style="color:var(--accent-green); margin-bottom:12px;"><i data-lucide="clipboard-check"></i> Registro de Presença</h3>
-        <input type="text" id="iptAttendanceName" class="form-control" placeholder="Nome do visitante ou membro" style="margin-bottom:10px;">
-        <div style="display:flex; gap:10px;">
-          <button class="btn btn-success" style="flex:1;" onclick="addAttendance()"><i data-lucide="user-plus"></i> Registrar</button>
-          <button class="btn btn-primary" style="flex:1; background:var(--accent-purple); color:#fff;" onclick="exportAttendancePDF()"><i data-lucide="file-text"></i> Baixar PDF</button>
+      <!-- Slanted Left Navigation -->
+      <nav class="sidebar-menu">
+        <div class="logo-container">
+          ABA <span>2.0</span>
+        </div>
+
+        <div class="menu-item active" onclick="switchTab('feed')">
+          <span class="icon-check">✓</span>
+          <span>Race / Feed</span>
+        </div>
+
+        <div class="menu-item" onclick="switchTab('agenda')">
+          <span class="icon-check">✓</span>
+          <span>Customize</span>
+        </div>
+
+        <div class="menu-item" onclick="switchTab('chamada')">
+          <span class="icon-check">✓</span>
+          <span>Settings</span>
+        </div>
+
+        <div class="menu-item" onclick="switchTab('membros')">
+          <span class="icon-check">✓</span>
+          <span>Multiplayer</span>
+        </div>
+
+        <div class="menu-item" onclick="switchTab('admin')">
+          <span class="icon-check">✓</span>
+          <span>Quit / Admin</span>
+        </div>
+      </nav>
+
+      <!-- Content Panels -->
+      <section id="panel-feed" class="content-display active">
+        <div class="content-box">
+          <h2>Feed & Publicações</h2>
+          <div id="feedList" style="margin-top: 20px;">Carregando publicações...</div>
+        </div>
+      </section>
+
+      <section id="panel-agenda" class="content-display">
+        <div class="content-box">
+          <h2>Agenda & Escalas</h2>
+          <p style="margin-top: 15px; color: var(--text-gray);">Programação semanal dos cultos e eventos.</p>
+        </div>
+      </section>
+
+      <section id="panel-chamada" class="content-display">
+        <div class="content-box">
+          <h2>Registro de Presença</h2>
+          <p style="margin-top: 15px; color: var(--text-gray);">Painel de controlo de membros e visitantes.</p>
+        </div>
+      </section>
+
+      <section id="panel-membros" class="content-display">
+        <div class="content-box">
+          <h2>Membros & Ministérios</h2>
+          <p style="margin-top: 15px; color: var(--text-gray);">Lista de departamentos e liderança.</p>
+        </div>
+      </section>
+
+      <section id="panel-admin" class="content-display">
+        <div class="content-box">
+          <h2>Painel Administrativo</h2>
+          <p style="margin-top: 15px; color: var(--text-gray);">Gestão de acessos e permissões.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Slanted News Feed Bar -->
+    <footer class="bottom-banner">
+      <div class="news-label">News Feed</div>
+      <div class="news-cards-container">
+        <div class="news-card" onclick="switchTab('feed')">
+          <h4>Sample News Title #1</h4>
+          <p>Avisos e novidades da comunidade...</p>
+        </div>
+        <div class="news-card" onclick="switchTab('agenda')">
+          <h4>Sample News Title #2</h4>
+          <p>Próximo culto de celebração este domingo...</p>
+        </div>
+        <div class="news-card" onclick="switchTab('midia')">
+          <h4>Sample News Title #3</h4>
+          <p>Transmissões ao vivo e gravações...</p>
         </div>
       </div>
+    </footer>
 
-      <div class="card">
-        <h4 style="margin-bottom:10px; color:var(--text-heading);">Membros/Visitantes Presentes:</h4>
-        <ul id="attendanceListRender" style="list-style:none; line-height:1.8; font-size:0.9rem;">
-          <li style="color:var(--text-muted);">Nenhum registro até o momento.</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="viewHistoria" class="view-panel">
-      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
-      <div class="card">
-        <h2 style="color:var(--accent-blue); margin-bottom:10px;">⛪ Igreja Missionária Unida do Brasil</h2>
-        <p style="color:var(--text-main); font-size:0.95rem; line-height:1.6; margin-bottom:12px;">
-          A <strong>IMUB</strong> é uma denominação evangélica comprometida com o avivamento espiritual, a proclamação da Palavra e a ação social.
-        </p>
-        <p style="color:var(--text-main); font-size:0.95rem; line-height:1.6;">
-          Nossa igreja em <strong>Itagimirim</strong> tem o propósito de acolher pessoas, transformar vidas pelo Evangelho e edificar uma comunidade firme na fé e na comunhão.
-        </p>
-      </div>
-    </section>
-
-    <section id="viewPerfil" class="view-panel">
-      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar ao Feed</button>
-
-      <div class="card profile-card-header">
-        <div class="avatar-large" id="profileInitials">U</div>
-        <h2 id="profileNameDisplay" style="color:var(--text-heading); font-size:1.3rem;">Usuário</h2>
-        <p id="profileEmailDisplay" style="font-size:0.82rem; color:var(--text-muted);">email@exemplo.com</p>
-        <span id="profileBadge" class="badge-role badge-membro">MEMBRO</span>
-
-        <div style="margin-top:18px; display:flex; justify-content:center; gap:10px;">
-          <button class="btn btn-outline" onclick="changeProfilePhoto()"><i data-lucide="camera"></i> Alterar Foto</button>
-          <button class="btn btn-danger" onclick="logout()"><i data-lucide="log-out"></i> Sair</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h4 style="color:var(--text-heading); margin-bottom:10px;">Minhas Publicações</h4>
-        <div id="userPostsList">
-          <p style="font-size:0.85rem; color:var(--text-muted);">Carregando suas postagens...</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="viewAdmin" class="view-panel">
-      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
-      <div class="card">
-        <h3 style="color:var(--accent-red); margin-bottom:12px;"><i data-lucide="shield-check"></i> Gestão de Usuários e Cargos</h3>
-        <div id="adminUsersContainer">
-          <p style="color:var(--text-muted);">Carregando usuários...</p>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <nav class="bottom-navigation" id="bottomNav" style="display:none;">
-    <button class="nav-link active" id="navFeed" onclick="switchView('viewFeed')">
-      <i data-lucide="home"></i>
-      <span>Feed</span>
-    </button>
-    <button class="nav-link" id="navCalendario" onclick="switchView('viewCalendario')">
-      <i data-lucide="calendar"></i>
-      <span>Agenda</span>
-    </button>
-    <button class="nav-link" id="navMidia" onclick="switchView('viewMidia')">
-      <i data-lucide="tv"></i>
-      <span>Lives</span>
-    </button>
-    <button class="nav-link" id="navChamada" onclick="switchView('viewChamada')">
-      <i data-lucide="clipboard-check"></i>
-      <span>Chamada</span>
-    </button>
-    <button class="nav-link" id="navHistoria" onclick="switchView('viewHistoria')">
-      <i data-lucide="heart"></i>
-      <span>Sobre</span>
-    </button>
-    <button class="nav-link" id="navPerfil" onclick="switchView('viewPerfil')">
-      <i data-lucide="user"></i>
-      <span>Perfil</span>
-    </button>
-    <button class="nav-link" id="btnNavAdmin" style="display:none; color:var(--accent-red);" onclick="switchView('viewAdmin')">
-      <i data-lucide="shield"></i>
-      <span>Admin</span>
-    </button>
-  </nav>
+  </div>
 
   <script src="app.js"></script>
 </body>
