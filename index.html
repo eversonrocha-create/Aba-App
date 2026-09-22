@@ -5,15 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aba 2.0 - Igreja Missionária de Itagimirim</title>
 
+  <!-- PWA & Ícones -->
   <link rel="icon" type="image/png" href="aba.png">
   <link rel="apple-touch-icon" href="aba.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1117">
 
+  <!-- Firebase SDKs (Compatibilidade para uso direto em browser) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
+  <!-- Lucide Icons & jsPDF (Geração de PDFs) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -170,6 +174,7 @@
       </div>
     </header>
 
+    <!-- TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
     <div id="viewAuth" class="view-section active animate-fade">
       <div class="auth-card">
         <h2 style="color:var(--text-heading); text-align:center; margin-bottom:8px;">Acessar o Aba</h2>
@@ -198,6 +203,7 @@
       </div>
     </div>
 
+    <!-- PORTAL PRINCIPAL (MENU DAS 8 ABAS) -->
     <div id="viewPortal" class="view-section animate-fade">
       <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:20px;">
         <h2 style="color:var(--text-heading);">Graça e Paz! 👋</h2>
@@ -271,6 +277,7 @@
       </div>
     </div>
 
+    <!-- ABA 1: AQUI É O SEU LUGAR -->
     <div id="viewAquiLugar" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -283,6 +290,7 @@
       </div>
     </div>
 
+    <!-- ABA 2: FEED SOCIAL -->
     <div id="viewSocial" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -296,6 +304,7 @@
       </div>
     </div>
 
+    <!-- ABA 3: MÍDIA & TRANSMISSÃO DE LIVE -->
     <div id="viewMidia" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -303,12 +312,14 @@
           <i data-lucide="radio"></i> Transmissão Ao Vivo / Culto
         </h3>
         <div class="video-container">
+          <!-- Transmissão ao vivo do YouTube -->
           <iframe id="iframeLive" src="https://www.youtube.com/embed/live_stream?channel=UC_SEUCHANNEL_ID" allowfullscreen></iframe>
         </div>
         <p style="font-size:0.85rem; color:var(--text-muted);">Assista aos nossos cultos ao vivo ou acesse o histórico no nosso canal oficial.</p>
       </div>
     </div>
 
+    <!-- ABA 4: CHAMADA E RELATÓRIO PDF -->
     <div id="viewChamada" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -329,6 +340,7 @@
       </div>
     </div>
 
+    <!-- ABA 5: CALENDÁRIO & ESCALAS -->
     <div id="viewCalendario" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -341,6 +353,7 @@
       </div>
     </div>
 
+    <!-- ABA 6: MEMBROS & MINISTÉRIOS -->
     <div id="viewMembros" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -353,6 +366,7 @@
       </div>
     </div>
 
+    <!-- ABA 7: PAINEL ADMIN -->
     <div id="viewAdmin" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -364,6 +378,7 @@
       </div>
     </div>
 
+    <!-- ABA 8: TUTORIAL DE USO (ACCORDION) -->
     <div id="viewTutorial" class="view-section animate-fade">
       <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
       <div class="box-card">
@@ -389,18 +404,21 @@
   </div>
 
   <script>
-    // Cole abaixo as chaves do seu projeto no Firebase ('aba-app')
+    // As tuas credenciais exatas já configuradas:
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY",
-      authDomain: "aba-app.firebaseapp.com",
-      databaseURL: "https://aba-app-default-rtdb.firebaseio.com",
-      projectId: "aba-app",
-      storageBucket: "aba-app.appspot.com",
-      messagingSenderId: "SEU_SENDER_ID",
-      appId: "SEU_APP_ID"
+      apiKey: "AIzaSyBzDM5VnLAKjUd6qfojvnZmDQsTB_D7cIs",
+      authDomain: "aba-app-828b4.firebaseapp.com",
+      databaseURL: "https://aba-app-828b4-default-rtdb.firebaseio.com",
+      projectId: "aba-app-828b4",
+      storageBucket: "aba-app-828b4.firebasestorage.app",
+      messagingSenderId: "943402703897",
+      appId: "1:943402703897:web:d3449445fb729e7424de88",
+      measurementId: "G-7Q5JEC40F6"
     };
 
+    // Inicialização do Firebase
     firebase.initializeApp(firebaseConfig);
+    if (firebase.analytics) { firebase.analytics(); }
     lucide.createIcons();
 
     let usuarioAtual = null;
@@ -491,7 +509,7 @@
           const post = data[key];
           container.innerHTML += `
             <div class="post-card">
-              <div style="display:flex; justify-size:space-between; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                 <strong style="color:var(--text-heading);">${post.autorNome}</strong>
                 <span style="font-size:0.75rem; color:var(--text-muted);">${post.data}</span>
               </div>
