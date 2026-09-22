@@ -1,1 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aba - Igreja Missionária de Itagimirim</title>
 
+  <link rel="icon" type="image/png" href="aba.png">
+  <link rel="apple-touch-icon" href="aba.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d1117">
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --card-bg: #161b22;
+      --border-color: #30363d;
+      --accent-blue: #58a6ff;
+      --accent-green: #238636;
+      --accent-purple: #8957e5;
+      --accent-yellow: #d29922;
+      --accent-red: #da3633;
+      --text-main: #c9d1d9;
+      --text-heading: #f0f6fc;
+      --text-muted: #8b949e;
+      --shadow-glow: 0 8px 24px rgba(88, 166, 255, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 15px;
+      overflow-x: hidden;
+    }
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    /* Animações */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+
+    .logo-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(88, 166, 255, 0.1);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .logo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Auth Box */
+    .auth-card {
+      max-width: 400px;
+      margin: 40px auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-heading);
+      font-size: 0.95rem;
+    }
+    .form-group input:focus { border-color: var(--accent-blue); outline: none; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent-blue);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+
+    /* Portal Grid */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .menu-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-purple { background: rgba(137, 87, 229, 0.15); color: var(--accent-purple); }
+    .icon-blue { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); }
+    .icon-red { background: rgba(218, 54, 51, 0.15); color: var(--accent-red); }
+    .icon-green { background: rgba(35, 134, 54, 0.15); color: #3fb950; }
+    .icon-yellow { background: rgba(210, 153, 34, 0.15); color: var(--accent-yellow); }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo-box">
+          <img src="aba.png" alt="Aba Logo" onerror="this.style.display='none'; document.getElementById('fallbackIcon').style.display='block';">
+          <i id="fallbackIcon" data-lucide="church" style="display:none; color:var(--accent-blue);"></i>
+        </div>
+        <div>
+          <h1 style="font-size:1.2rem; color:var(--text-heading);">Aba <span style="font-size:0.75rem; background:var(--accent-blue); color:#000; padding:2px 6px; border-radius:10px; vertical-align:middle;">2.0</span></h1>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Igreja Missionária de Itagimirim</p>
+        </div>
+      </div>
+      <div id="userProfileHeader" style="display:none; align-items:center; gap:10px;">
+        <span id="txtUserName" style="font-size:0.85rem; font-weight:bold;"></span>
+        <button class="btn-back" style="margin-bottom:0;" onclick="fazerLogout()"><i data-lucide="log-out"></i></button>
+      </div>
+    </header>
+
+    <div id="viewAuth" class="view-section active animate-fade">
+      <div class="auth-card">
+        <h2 style="color:var(--text-heading); text-align:center; margin-bottom:8px;">Acessar o Aba</h2>
+        <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:20px;">Entre com sua conta ou cadastre-se</p>
+
+        <form id="formAuth" onsubmit="tratarAutenticacao(event)">
+          <div class="form-group" id="groupNome" style="display:none;">
+            <label>Nome Completo</label>
+            <input type="text" id="iptNome" placeholder="Seu nome">
+          </div>
+          <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="iptEmail" required placeholder="seu@email.com">
+          </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="iptSenha" required placeholder="******">
+          </div>
+
+          <button type="submit" class="btn-primary" id="btnSubmitAuth">Entrar</button>
+        </form>
+
+        <p style="text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted);">
+          <span id="txtToggleAuth">Não tem uma conta? <a href="#" onclick="alternarModoAuth(true)" style="color:var(--accent-blue);">Cadastre-se</a></span>
+        </p>
+      </div>
+    </div>
+
+    <div id="viewPortal" class="view-section animate-fade">
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:20px;">
+        <h2 style="color:var(--text-heading);">Graça e Paz! 👋</h2>
+        <p style="font-size:0.85rem; color:var(--text-muted);">Seja bem-vindo ao portal da Igreja Missionária de Itagimirim.</p>
+      </div>
+
+      <div class="portal-grid">
+        <div class="menu-card" onclick="navegarPara('viewAquiLugar')">
+          <div class="card-icon icon-purple"><i data-lucide="heart"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">1. Aqui é o seu Lugar</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Nossa história e missão.</p>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="alert('Aba Social em desenvolvimento!')">
+          <div class="card-icon icon-blue"><i data-lucide="message-square"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">2. Social</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Feed interativo da igreja.</p>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="alert('Aba Mídia em desenvolvimento!')">
+          <div class="card-icon icon-red"><i data-lucide="video"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">3. Mídia & Cultos</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Transmissões e gravações.</p>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="alert('Chamadas em desenvolvimento!')">
+          <div class="card-icon icon-green"><i data-lucide="clipboard-check"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">4. Chamada e Pastas</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Controle de presenças.</p>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="alert('Calendário em desenvolvimento!')">
+          <div class="card-icon icon-yellow"><i data-lucide="calendar"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">5. Calendário & Escalas</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Agenda de cultos e eventos.</p>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="alert('Membros em desenvolvimento!')">
+          <div class="card-icon icon-blue"><i data-lucide="users"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">6. Membros & Ministérios</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Organização das equipes.</p>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="alert('Painel Admin em desenvolvimento!')">
+          <div class="card-icon icon-red"><i data-lucide="shield-check"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">7. Painel Admin</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Gestão de contas e papéis.</p>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="alert('Tutorial em desenvolvimento!')">
+          <div class="card-icon icon-purple"><i data-lucide="help-circle"></i></div>
+          <div>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">8. Tutorial de Uso</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Guia explicativo das funções.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewAquiLugar" class="view-section animate-fade">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar</button>
+      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:24px;">
+        <h2 style="color:var(--accent-blue); margin-bottom:10px;">⛪ Igreja Missionária de Itagimirim</h2>
+        <p style="color:var(--text-main); line-height:1.6;">Bem-vindo à nossa comunidade! Somos uma igreja comprometida com a pregação da Palavra de Deus, o amor ao próximo e o fortalecimento das famílias em Itagimirim.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Configuração do seu Firebase (Substitua pelos dados do projeto 'aba-app')
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "aba-app.firebaseapp.com",
+      databaseURL: "https://aba-app-default-rtdb.firebaseio.com",
+      projectId: "aba-app",
+      storageBucket: "aba-app.appspot.com",
+      messagingSenderId: "SEU_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    lucide.createIcons();
+
+    let isCadastro = false;
+
+    function alternarModoAuth(modoCadastro) {
+      isCadastro = modoCadastro;
+      document.getElementById('groupNome').style.display = isCadastro ? 'block' : 'none';
+      document.getElementById('btnSubmitAuth').innerText = isCadastro ? 'Criar Conta' : 'Entrar';
+      document.getElementById('txtToggleAuth').innerHTML = isCadastro 
+        ? 'Já tem uma conta? <a href="#" onclick="alternarModoAuth(false)" style="color:var(--accent-blue);">Entre aqui</a>'
+        : 'Não tem uma conta? <a href="#" onclick="alternarModoAuth(true)" style="color:var(--accent-blue);">Cadastre-se</a>';
+    }
+
+    function tratarAutenticacao(e) {
+      e.preventDefault();
+      const email = document.getElementById('iptEmail').value;
+      const senha = document.getElementById('iptSenha').value;
+
+      if (isCadastro) {
+        const nome = document.getElementById('iptNome').value;
+        firebase.auth().createUserWithEmailAndPassword(email, senha)
+          .then(res => {
+            return firebase.database().ref('usuarios/' + res.user.uid).set({
+              nome: nome,
+              email: email,
+              nivelAcesso: 'membro'
+            });
+          })
+          .catch(err => alert('Erro ao cadastrar: ' + err.message));
+      } else {
+        firebase.auth().signInWithEmailAndPassword(email, senha)
+          .catch(err => alert('Erro ao entrar: ' + err.message));
+      }
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('userProfileHeader').style.display = 'flex';
+        firebase.database().ref('usuarios/' + user.uid).once('value').then(snap => {
+          const dados = snap.val() || {};
+          document.getElementById('txtUserName').innerText = dados.nome || user.email;
+        });
+        navegarPara('viewPortal');
+      } else {
+        document.getElementById('userProfileHeader').style.display = 'none';
+        navegarPara('viewAuth');
+      }
+    });
+
+    function fazerLogout() { firebase.auth().signOut(); }
+
+    function navegarPara(viewId) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+    }
+  </script>
+</body>
+</html>
