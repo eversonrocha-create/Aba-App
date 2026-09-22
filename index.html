@@ -15,6 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     :root {
@@ -43,7 +44,7 @@
       overflow-x: hidden;
     }
 
-    .container { max-width: 900px; margin: 0 auto; }
+    .container { max-width: 950px; margin: 0 auto; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -65,14 +66,14 @@
     .brand { display: flex; align-items: center; gap: 12px; }
 
     .logo-box {
-      width: 42px; height: 42px; border-radius: 10px;
+      width: 44px; height: 44px; border-radius: 10px;
       background: rgba(88, 166, 255, 0.1); border: 1px solid var(--border-color);
       display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
 
     .logo-box img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Auth Form */
+    /* Login/Auth Card */
     .auth-card {
       max-width: 380px; margin: 40px auto; background: var(--card-bg);
       border: 1px solid var(--border-color); border-radius: 16px; padding: 28px;
@@ -80,18 +81,22 @@
 
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
-    .form-group input {
+    .form-group input, .form-group select, .form-group textarea {
       width: 100%; padding: 10px 14px; background: var(--bg-dark);
       border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-heading); font-size: 0.95rem;
     }
 
     .btn-primary {
-      width: 100%; padding: 12px; background: var(--accent-blue); color: #000;
+      width: 100%; padding: 10px 18px; background: var(--accent-blue); color: #000;
       border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     }
     .btn-primary:hover { opacity: 0.9; }
 
-    /* Portal Cards */
+    .btn-success { background: var(--accent-green); color: #fff; }
+    .btn-danger { background: var(--accent-red); color: #fff; }
+
+    /* Cards e Grid do Portal */
     .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 
     .menu-card {
@@ -118,34 +123,28 @@
       border-radius: 8px; cursor: pointer; margin-bottom: 20px;
     }
 
-    /* Feed Social (Estilo Twitter) */
-    .tweet-box {
+    /* Estilos das Abas Internas */
+    .post-card, .box-card {
       background: var(--card-bg); border: 1px solid var(--border-color);
-      border-radius: 14px; padding: 16px; margin-bottom: 20px;
+      border-radius: 14px; padding: 18px; margin-bottom: 16px;
     }
 
-    .tweet-box textarea {
-      width: 100%; background: transparent; border: none; color: var(--text-heading);
-      font-size: 1rem; resize: none; min-height: 80px; outline: none; margin-bottom: 10px;
-    }
-
-    .post-card {
+    /* Accordion / Sanfona (Tutorial) */
+    .accordion-item {
       background: var(--card-bg); border: 1px solid var(--border-color);
-      border-radius: 14px; padding: 16px; margin-bottom: 16px;
+      border-radius: 10px; margin-bottom: 10px; overflow: hidden;
     }
-
-    .post-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .post-user { font-weight: bold; color: var(--text-heading); font-size: 0.95rem; }
-    .post-time { font-size: 0.75rem; color: var(--text-muted); }
-
-    .post-actions {
-      display: flex; gap: 20px; margin-top: 12px; padding-top: 10px;
-      border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.85rem;
+    .accordion-header {
+      padding: 14px 18px; font-weight: bold; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
     }
+    .accordion-body { padding: 14px 18px; border-top: 1px solid var(--border-color); display: none; color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
 
-    .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; transition: color 0.2s; }
-    .action-btn:hover { color: var(--accent-blue); }
-    .action-btn.liked { color: var(--accent-red); }
+    /* Video Embed Responsive */
+    .video-container {
+      position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 15px;
+    }
+    .video-container iframe { position: absolute; top:0; left: 0; width: 100%; height: 100%; border:0; }
 
     .view-section { display: none; }
     .view-section.active { display: block; }
@@ -174,12 +173,12 @@
     <div id="viewAuth" class="view-section active animate-fade">
       <div class="auth-card">
         <h2 style="color:var(--text-heading); text-align:center; margin-bottom:8px;">Acessar o Aba</h2>
-        <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:20px;">Entre com sua conta ou cadastres-se</p>
+        <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:20px;">Entre com sua conta ou cadastre-se</p>
 
         <form id="formAuth" onsubmit="tratarAutenticacao(event)">
           <div class="form-group" id="groupNome" style="display:none;">
             <label>Nome Completo</label>
-            <input type="text" id="iptNome" placeholder="Seu nome">
+            <input type="text" id="iptNome" placeholder="Seu nome completo">
           </div>
           <div class="form-group">
             <label>E-mail</label>
@@ -202,7 +201,7 @@
     <div id="viewPortal" class="view-section animate-fade">
       <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:20px;">
         <h2 style="color:var(--text-heading);">Graça e Paz! 👋</h2>
-        <p style="font-size:0.85rem; color:var(--text-muted);">Seja bem-vindo ao portal da Igreja Missionária de Itagimirim.</p>
+        <p style="font-size:0.85rem; color:var(--text-muted);">Selecione um dos módulos abaixo para acessar.</p>
       </div>
 
       <div class="portal-grid">
@@ -210,7 +209,7 @@
           <div class="card-icon icon-purple"><i data-lucide="heart"></i></div>
           <div>
             <h3 style="font-size:0.95rem; color:var(--text-heading);">1. Aqui é o seu Lugar</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Nossa história e missão.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">História e princípios.</p>
           </div>
         </div>
 
@@ -218,87 +217,179 @@
           <div class="card-icon icon-blue"><i data-lucide="message-square"></i></div>
           <div>
             <h3 style="font-size:0.95rem; color:var(--text-heading);">2. Feed Social</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Publicações, curtidas e comunhão.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Comunidade e interações.</p>
           </div>
         </div>
 
-        <div class="menu-card" onclick="alert('Em breve: Aba Mídia!')">
+        <div class="menu-card" onclick="navegarPara('viewMidia')">
           <div class="card-icon icon-red"><i data-lucide="video"></i></div>
           <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">3. Mídia & Cultos</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Transmissões e gravações.</p>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">3. Mídia & Lives</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Cultos ao vivo e vídeos.</p>
           </div>
         </div>
 
-        <div class="menu-card" onclick="alert('Em breve: Chamadas e Pastas!')">
+        <div class="menu-card" onclick="navegarPara('viewChamada')">
           <div class="card-icon icon-green"><i data-lucide="clipboard-check"></i></div>
           <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">4. Chamada e Pastas</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Controle de presenças.</p>
+            <h3 style="font-size:0.95rem; color:var(--text-heading);">4. Chamada & PDF</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Presença e relatórios PDF.</p>
           </div>
         </div>
 
-        <div class="menu-card" onclick="alert('Em breve: Calendário!')">
+        <div class="menu-card" onclick="navegarPara('viewCalendario')">
           <div class="card-icon icon-yellow"><i data-lucide="calendar"></i></div>
           <div>
             <h3 style="font-size:0.95rem; color:var(--text-heading);">5. Calendário & Escalas</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Agenda de cultos e eventos.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Programação e eventos.</p>
           </div>
         </div>
 
-        <div class="menu-card" onclick="alert('Em breve: Membros!')">
+        <div class="menu-card" onclick="navegarPara('viewMembros')">
           <div class="card-icon icon-blue"><i data-lucide="users"></i></div>
           <div>
             <h3 style="font-size:0.95rem; color:var(--text-heading);">6. Membros & Ministérios</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Organização das equipes.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Departamentos e líderes.</p>
           </div>
         </div>
 
-        <div class="menu-card" onclick="alert('Em breve: Painel Admin!')">
+        <div class="menu-card" onclick="navegarPara('viewAdmin')">
           <div class="card-icon icon-red"><i data-lucide="shield-check"></i></div>
           <div>
             <h3 style="font-size:0.95rem; color:var(--text-heading);">7. Painel Admin</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Gestão de contas e papéis.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Gestão de acessos.</p>
           </div>
         </div>
 
-        <div class="menu-card" onclick="alert('Em breve: Tutorial!')">
+        <div class="menu-card" onclick="navegarPara('viewTutorial')">
           <div class="card-icon icon-purple"><i data-lucide="help-circle"></i></div>
           <div>
             <h3 style="font-size:0.95rem; color:var(--text-heading);">8. Tutorial de Uso</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Guia explicativo das funções.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Guia rápido das abas.</p>
           </div>
         </div>
       </div>
     </div>
 
     <div id="viewAquiLugar" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar</button>
-      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:24px;">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
         <h2 style="color:var(--accent-blue); margin-bottom:10px;">⛪ Igreja Missionária de Itagimirim</h2>
-        <p style="color:var(--text-main); line-height:1.6;">Bem-vindo à nossa comunidade! Somos uma igreja comprometida com a pregação da Palavra de Deus, o amor ao próximo e o fortalecimento das famílias em Itagimirim.</p>
+        <p style="color:var(--text-main); line-height:1.6; margin-bottom:15px;">
+          Nossa igreja é um lugar de acolhimento, fé e transformação em Itagimirim. Temos raízes firmadas nas Escrituras Sagradas e no compromisso com o evangelho de Jesus Cristo.
+        </p>
+        <h3 style="color:var(--text-heading); margin-top:20px; margin-bottom:10px;">Nossa Visão e Missão</h3>
+        <p style="color:var(--text-muted); line-height:1.5;">Proclamar a Palavra de Deus, fortalecer famílias e criar um ambiente de comunhão viva para todas as gerações.</p>
       </div>
     </div>
 
     <div id="viewSocial" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar</button>
-
-      <div class="tweet-box">
-        <textarea id="iptPostConteudo" placeholder="O que Deus tem falado ao seu coração hoje?"></textarea>
-        <div style="display:flex; justify-content:flex-end;">
-          <button class="btn-primary" style="width:auto; padding:8px 20px;" onclick="publicarPost()">Publicar</button>
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
+        <div class="form-group">
+          <textarea id="iptPostConteudo" rows="3" placeholder="Compartilhe uma palavra ou pedido de oração..."></textarea>
         </div>
+        <button class="btn-primary" style="width:auto;" onclick="publicarPost()"><i data-lucide="send"></i> Publicar</button>
+      </div>
+      <div id="feedPostsList">
+        <p style="text-align:center; color:var(--text-muted);">Carregando feed...</p>
+      </div>
+    </div>
+
+    <div id="viewMidia" class="view-section animate-fade">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
+        <h3 style="color:var(--accent-red); margin-bottom:15px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="radio"></i> Transmissão Ao Vivo / Culto
+        </h3>
+        <div class="video-container">
+          <iframe id="iframeLive" src="https://www.youtube.com/embed/live_stream?channel=UC_SEUCHANNEL_ID" allowfullscreen></iframe>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted);">Assista aos nossos cultos ao vivo ou acesse o histórico no nosso canal oficial.</p>
+      </div>
+    </div>
+
+    <div id="viewChamada" class="view-section animate-fade">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
+        <h3 style="color:var(--accent-green); margin-bottom:15px;"><i data-lucide="clipboard-check"></i> Controle de Presença</h3>
+        <div class="form-group">
+          <label>Nome do Visitante ou Membro</label>
+          <input type="text" id="iptNomeChamada" placeholder="Digite o nome">
+        </div>
+        <button class="btn-primary btn-success" onclick="adicionarAChamada()"><i data-lucide="user-plus"></i> Registrar Presença</button>
+        <button class="btn-primary" style="margin-top:10px; background:var(--accent-purple); color:#fff;" onclick="gerarPDFChamada()"><i data-lucide="file-text"></i> Baixar Relatório em PDF</button>
       </div>
 
-      <div id="feedPostsList">
-        <p style="text-align:center; color:var(--text-muted); padding:20px;">Carregando publicações...</p>
+      <div class="box-card">
+        <h4 style="margin-bottom:12px; color:var(--text-heading);">Lista de Presentes Hoje:</h4>
+        <ul id="listaChamada" style="list-style:none; line-height:2;">
+          <li style="color:var(--text-muted);">Nenhum registro até o momento.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="viewCalendario" class="view-section animate-fade">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
+        <h3 style="color:var(--accent-yellow); margin-bottom:15px;"><i data-lucide="calendar"></i> Programação Semanal</h3>
+        <ul style="line-height:2; color:var(--text-main); padding-left:20px;">
+          <li><strong>Domingo - 19:00:</strong> Culto da Família & Celebração</li>
+          <li><strong>Quarta-feira - 19:30:</strong> Culto de Ensino e Oração</li>
+          <li><strong>Sábado - 19:00:</strong> Encontro de Jovens e Adolescentes</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="viewMembros" class="view-section animate-fade">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
+        <h3 style="color:var(--accent-blue); margin-bottom:15px;"><i data-lucide="users"></i> Departamentos da Igreja</h3>
+        <p style="color:var(--text-muted); line-height:1.6;">
+          • <strong>Ministério de Louvor:</strong> Equipes de música e sonoplastia.<br>
+          • <strong>Mídia e Comunicação:</strong> Transmissão e redes sociais.<br>
+          • <strong>Ministério Infantil:</strong> Ensino e cuidado para as crianças.
+        </p>
+      </div>
+    </div>
+
+    <div id="viewAdmin" class="view-section animate-fade">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
+        <h3 style="color:var(--accent-red); margin-bottom:15px;"><i data-lucide="shield-check"></i> Painel de Administração</h3>
+        <p style="color:var(--text-muted); margin-bottom:15px;">Gerencie e aprove o nível de acesso dos cadastrados:</p>
+        <div id="adminUsersList">
+          <p style="color:var(--text-muted);">Carregando usuários registrados...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewTutorial" class="view-section animate-fade">
+      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
+      <div class="box-card">
+        <h3 style="color:var(--accent-purple); margin-bottom:15px;"><i data-lucide="help-circle"></i> Tutorial e Guia do Aplicativo</h3>
+        
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Como funciona a Chamada & PDF? <i data-lucide="chevron-down"></i></div>
+          <div class="accordion-body">Na aba 4, os obreiros podem adicionar nomes de presença no culto e clicar no botão 'Baixar Relatório em PDF' para salvar o arquivo no celular ou computador.</div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Como publicar no Feed Social? <i data-lucide="chevron-down"></i></div>
+          <div class="accordion-body">Basta acessar a aba 2 (Feed Social), escrever sua mensagem ou versículo e clicar em 'Publicar'. Todos os irmãos cadastrados poderão ver e curtir.</div>
+        </div>
+
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Como assistir às Lives ao vivo? <i data-lucide="chevron-down"></i></div>
+          <div class="accordion-body">Acesse a aba 3 (Mídia & Lives) no horário do culto para acompanhar a transmissão direto da igreja.</div>
+        </div>
       </div>
     </div>
 
   </div>
 
   <script>
-    // Cole aqui os dados do seu Firebase (do projeto 'aba-app')
+    // Cole abaixo as chaves do seu projeto no Firebase ('aba-app')
     const firebaseConfig = {
       apiKey: "SUA_API_KEY",
       authDomain: "aba-app.firebaseapp.com",
@@ -314,7 +405,9 @@
 
     let usuarioAtual = null;
     let isCadastro = false;
+    let listaPresenca = [];
 
+    // Lógica de Autenticação
     function alternarModoAuth(modoCadastro) {
       isCadastro = modoCadastro;
       document.getElementById('groupNome').style.display = isCadastro ? 'block' : 'none';
@@ -339,10 +432,10 @@
               nivelAcesso: 'membro'
             });
           })
-          .catch(err => alert('Erro ao cadastrar: ' + err.message));
+          .catch(err => alert('Erro no cadastro: ' + err.message));
       } else {
         firebase.auth().signInWithEmailAndPassword(email, senha)
-          .catch(err => alert('Erro ao entrar: ' + err.message));
+          .catch(err => alert('Erro no login: ' + err.message));
       }
     }
 
@@ -355,7 +448,8 @@
           usuarioAtual.nome = dados.nome || user.email;
           document.getElementById('txtUserName').innerText = usuarioAtual.nome;
         });
-        carregarFeed();
+        carregarPosts();
+        carregarUsuariosAdmin();
         navegarPara('viewPortal');
       } else {
         usuarioAtual = null;
@@ -374,56 +468,104 @@
     // Lógica do Feed Social
     function publicarPost() {
       const conteudo = document.getElementById('iptPostConteudo').value.trim();
-      if (!conteudo) return alert('Digite uma mensagem para publicar!');
+      if (!conteudo) return alert('Digite uma mensagem!');
 
-      const novoPost = {
-        autorId: usuarioAtual.uid,
+      firebase.database().ref('posts').push({
         autorNome: usuarioAtual.nome || 'Membro Aba',
         texto: conteudo,
         data: new Date().toLocaleString('pt-BR'),
         curtidas: 0
-      };
-
-      firebase.database().ref('posts').push(novoPost).then(() => {
+      }).then(() => {
         document.getElementById('iptPostConteudo').value = '';
       });
     }
 
-    function carregarFeed() {
+    function carregarPosts() {
       firebase.database().ref('posts').on('value', snap => {
         const container = document.getElementById('feedPostsList');
         container.innerHTML = '';
         const data = snap.val();
-
-        if (!data) {
-          container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:20px;">Nenhuma publicação ainda. Seja o primeiro!</p>';
-          return;
-        }
+        if (!data) return container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Nenhum post publicado.</p>';
 
         Object.keys(data).reverse().forEach(key => {
           const post = data[key];
-          const div = document.createElement('div');
-          div.className = 'post-card';
-          div.innerHTML = `
-            <div class="post-header">
-              <span class="post-user">${post.autorNome}</span>
-              <span class="post-time">${post.data}</span>
-            </div>
-            <p style="color:var(--text-heading); line-height:1.4;">${post.texto}</p>
-            <div class="post-actions">
-              <div class="action-btn" onclick="curtirPost('${key}', ${post.curtidas || 0})">
-                <i data-lucide="heart"></i> <span>${post.curtidas || 0}</span>
+          container.innerHTML += `
+            <div class="post-card">
+              <div style="display:flex; justify-size:space-between; margin-bottom:8px;">
+                <strong style="color:var(--text-heading);">${post.autorNome}</strong>
+                <span style="font-size:0.75rem; color:var(--text-muted);">${post.data}</span>
               </div>
+              <p style="color:var(--text-main); line-height:1.4;">${post.texto}</p>
             </div>
           `;
-          container.appendChild(div);
         });
-        lucide.createIcons();
       });
     }
 
-    function curtirPost(postId, curtidasAtuais) {
-      firebase.database().ref('posts/' + postId + '/curtidas').set(curtidasAtuais + 1);
+    // Lógica de Chamada e Geração de PDF
+    function adicionarAChamada() {
+      const nome = document.getElementById('iptNomeChamada').value.trim();
+      if (!nome) return alert('Digite um nome!');
+      listaPresenca.push(nome);
+      document.getElementById('iptNomeChamada').value = '';
+      atualizarListaChamada();
+    }
+
+    function atualizarListaChamada() {
+      const ul = document.getElementById('listaChamada');
+      ul.innerHTML = '';
+      listaPresenca.forEach((nome, i) => {
+        ul.innerHTML += `<li style="color:var(--text-heading);">${i+1}. ${nome}</li>`;
+      });
+    }
+
+    function gerarPDFChamada() {
+      if (listaPresenca.length === 0) return alert('A lista de chamada está vazia!');
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(16);
+      doc.text("Igreja Missionária de Itagimirim", 20, 20);
+      doc.setFontSize(12);
+      doc.text("Relatório de Presença do Culto", 20, 30);
+      doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 38);
+      doc.text("--------------------------------------------------", 20, 44);
+
+      let y = 52;
+      listaPresenca.forEach((nome, index) => {
+        doc.text(`${index + 1}. ${nome}`, 20, y);
+        y += 8;
+      });
+
+      doc.save(`chamada-itagimirim-${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    // Lógica do Painel Admin
+    function carregarUsuariosAdmin() {
+      firebase.database().ref('usuarios').on('value', snap => {
+        const container = document.getElementById('adminUsersList');
+        container.innerHTML = '';
+        const data = snap.val() || {};
+        Object.keys(data).forEach(id => {
+          const u = data[id];
+          container.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding:10px 0;">
+              <div>
+                <strong style="color:var(--text-heading);">${u.nome || 'Sem nome'}</strong><br>
+                <span style="font-size:0.75rem; color:var(--text-muted);">${u.email}</span>
+              </div>
+              <span style="background:var(--border-color); padding:4px 8px; border-radius:6px; font-size:0.8rem;">${u.nivelAcesso || 'membro'}</span>
+            </div>
+          `;
+        });
+      });
+    }
+
+    // Sanfona/Accordion do Tutorial
+    function toggleAccordion(header) {
+      const body = header.nextElementSibling;
+      body.style.display = body.style.display === 'block' ? 'none' : 'block';
     }
   </script>
 </body>
