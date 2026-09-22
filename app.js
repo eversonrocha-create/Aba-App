@@ -10,57 +10,126 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-// Troca de Abas com a Estética do Wireframe
+let isAdmin = true; // Define o modo admin ativado por padrão para gestão
+let editingHistoryKey = null;
+
+// Sistema de Navegação por Abas (Sempre passa pelo Lobby)
 function switchTab(tabId) {
-  // Atualiza painéis ativos
-  document.querySelectorAll('.content-display').forEach(panel => {
+  // Esconde todas as views
+  document.querySelectorAll('.view-panel').forEach(panel => {
     panel.classList.remove('active');
   });
-  
-  const targetPanel = document.getElementById(`panel-${tabId}`);
-  if (targetPanel) {
-    targetPanel.classList.add('active');
+
+  // Remove a classe ativa do menu lateral
+  document.querySelectorAll('.poly-menu-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
+  // Exibe a view selecionada
+  const targetView = document.getElementById(`view-${tabId}`);
+  if (targetView) {
+    targetView.classList.add('active');
   }
 
-  // Atualiza botões do menu diagonal
-  const menuItems = document.querySelectorAll('.menu-item');
-  menuItems.forEach(item => item.classList.remove('active'));
+  const activeMenuItem = document.getElementById(`menu-${tabId}`);
+  if (activeMenuItem) {
+    activeMenuItem.classList.add('active');
+  }
 
-  const tabIndexMap = {
-    'feed': 0,
-    'agenda': 1,
-    'chamada': 2,
-    'membros': 3,
-    'admin': 4
-  };
-
-  if (tabIndexMap[tabId] !== undefined) {
-    menuItems[tabIndexMap[tabId]].classList.add('active');
+  if (tabId === 'historia') {
+    loadHistoryTexts();
   }
 }
 
-// Carregar Dados Básicos do Firebase
-document.addEventListener('DOMContentLoaded', () => {
-  firebase.database().ref('posts').limitToLast(5).on('value', snap => {
-    const container = document.getElementById('feedList');
-    if (!container) return;
-    
-    const data = snap.val();
+// LÓGICA DA HISTÓRIA DA IGREJA (POSTAR, EDITAR, EXCLUIR)
+function loadHistoryTexts() {
+  const formBox = document.getElementById('adminHistoryForm');
+  formBox.style.display = isAdmin ? 'flex' : 'none';
+
+  db.ref('church_history').on('value', snapshot => {
+    const container = document.getElementById('historyList');
+    container.innerHTML = '';
+    const data = snapshot.val();
+
     if (!data) {
-      container.innerHTML = '<p style="color: var(--text-gray);">Sem publicações recentes.</p>';
+      container.innerHTML = `
+        <div class="history-block">
+          <h3>Igreja Missionária Unida de Itagimirim</h3>
+          <p>Nossa igreja tem raízes firmadas nas Escrituras Sagradas e no compromisso com o evangelho de Jesus Cristo em Itagimirim, BA.</p>
+        </div>
+      `;
       return;
     }
 
-    container.innerHTML = '';
-    Object.keys(data).reverse().forEach(key => {
-      const post = data[key];
+    Object.keys(data).forEach(key => {
+      const item = data[key];
+      let adminButtons = '';
+
+      if (isAdmin) {
+        adminButtons = `
+          <div class="admin-controls">
+            <button class="btn-hud" onclick="editHistoryText('${key}', '${encodeURIComponent(item.title)}', '${encodeURIComponent(item.body)}')">Editar</button>
+            <button class="btn-hud btn-danger" onclick="deleteHistoryText('${key}')">Excluir</button>
+          </div>
+        `;
+      }
+
       container.innerHTML += `
-        <div style="border-bottom: 1px solid var(--border-color); padding: 10px 0;">
-          <strong style="color: #fff;">${post.autorNome || 'Membro'}:</strong>
-          <p style="color: var(--text-gray); font-size: 0.9rem;">${post.texto}</p>
-        </div>
+        <article class="history-block">
+          <h3>${item.title}</h3>
+          <p style="margin-top:10px; line-height:1.5;">${item.body}</p>
+          ${adminButtons}
+        </article>
       `;
     });
   });
+}
+
+function saveHistoryText() {
+  const title = document.getElementById('historyTitle').value.trim();
+  const body = document.getElementById('historyBody').value.trim();
+
+  if (!title || !body) return alert("Preencha o título e o texto.");
+
+  if (editingHistoryKey) {
+    db.ref(`church_history/${editingHistoryKey}`).update({ title, body })
+      .then(() => {
+        editingHistoryKey = null;
+        resetHistoryForm();
+      });
+  } else {
+    db.ref('church_history').push({ title, body, timestamp: Date.now() })
+      .then(() => resetHistoryForm());
+  }
+}
+
+function editHistoryText(key, titleEncoded, bodyEncoded) {
+  editingHistoryKey = key;
+  document.getElementById('historyTitle').value = decodeURIComponent(titleEncoded);
+  document.getElementById('historyBody').value = decodeURIComponent(bodyEncoded);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteHistoryText(key) {
+  if (confirm("Tem certeza que deseja excluir este texto da história?")) {
+    db.ref(`church_history/${key}`).remove();
+  }
+}
+
+function resetHistoryForm() {
+  document.getElementById('historyTitle').value = '';
+  document.getElementById('historyBody').value = '';
+}
+
+function toggleAdminRole() {
+  isAdmin = !isAdmin;
+  alert(isAdmin ? "Modo Administrador Ativado" : "Modo Membro Ativado");
+  loadHistoryTexts();
+}
+
+// Inicializador
+document.addEventListener('DOMContentLoaded', () => {
+  loadHistoryTexts();
 });
