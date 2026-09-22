@@ -1,590 +1,225 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Aba 2.0 - Igreja Missionária de Itagimirim</title>
 
-  <!-- PWA & Ícones -->
   <link rel="icon" type="image/png" href="aba.png">
   <link rel="apple-touch-icon" href="aba.png">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1117">
 
-  <!-- Firebase SDKs (Compatibilidade para uso direto em browser) -->
+  <link rel="stylesheet" href="style.css">
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
 
-  <!-- Lucide Icons & jsPDF (Geração de PDFs) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <style>
-    :root {
-      --bg-dark: #0d1117;
-      --card-bg: #161b22;
-      --border-color: #30363d;
-      --accent-blue: #58a6ff;
-      --accent-green: #238636;
-      --accent-purple: #8957e5;
-      --accent-yellow: #d29922;
-      --accent-red: #da3633;
-      --text-main: #c9d1d9;
-      --text-heading: #f0f6fc;
-      --text-muted: #8b949e;
-      --shadow-glow: 0 8px 24px rgba(88, 166, 255, 0.12);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      min-height: 100vh;
-      padding: 15px;
-      overflow-x: hidden;
-    }
-
-    .container { max-width: 950px; margin: 0 auto; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .animate-fade { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-    /* Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-color);
-      margin-bottom: 20px;
-    }
-
-    .brand { display: flex; align-items: center; gap: 12px; }
-
-    .logo-box {
-      width: 44px; height: 44px; border-radius: 10px;
-      background: rgba(88, 166, 255, 0.1); border: 1px solid var(--border-color);
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
-    }
-
-    .logo-box img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* Login/Auth Card */
-    .auth-card {
-      max-width: 380px; margin: 40px auto; background: var(--card-bg);
-      border: 1px solid var(--border-color); border-radius: 16px; padding: 28px;
-    }
-
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%; padding: 10px 14px; background: var(--bg-dark);
-      border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-heading); font-size: 0.95rem;
-    }
-
-    .btn-primary {
-      width: 100%; padding: 10px 18px; background: var(--accent-blue); color: #000;
-      border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-primary:hover { opacity: 0.9; }
-
-    .btn-success { background: var(--accent-green); color: #fff; }
-    .btn-danger { background: var(--accent-red); color: #fff; }
-
-    /* Cards e Grid do Portal */
-    .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-
-    .menu-card {
-      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px;
-      padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.25s ease;
-    }
-
-    .menu-card:hover { transform: translateY(-4px); border-color: var(--accent-blue); box-shadow: var(--shadow-glow); }
-
-    .card-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-
-    .icon-purple { background: rgba(137, 87, 229, 0.15); color: var(--accent-purple); }
-    .icon-blue { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); }
-    .icon-red { background: rgba(218, 54, 51, 0.15); color: var(--accent-red); }
-    .icon-green { background: rgba(35, 134, 54, 0.15); color: #3fb950; }
-    .icon-yellow { background: rgba(210, 153, 34, 0.15); color: var(--accent-yellow); }
-
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-      background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main);
-      border-radius: 8px; cursor: pointer; margin-bottom: 20px;
-    }
-
-    /* Estilos das Abas Internas */
-    .post-card, .box-card {
-      background: var(--card-bg); border: 1px solid var(--border-color);
-      border-radius: 14px; padding: 18px; margin-bottom: 16px;
-    }
-
-    /* Accordion / Sanfona (Tutorial) */
-    .accordion-item {
-      background: var(--card-bg); border: 1px solid var(--border-color);
-      border-radius: 10px; margin-bottom: 10px; overflow: hidden;
-    }
-    .accordion-header {
-      padding: 14px 18px; font-weight: bold; cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .accordion-body { padding: 14px 18px; border-top: 1px solid var(--border-color); display: none; color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
-
-    /* Video Embed Responsive */
-    .video-container {
-      position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 15px;
-    }
-    .video-container iframe { position: absolute; top:0; left: 0; width: 100%; height: 100%; border:0; }
-
-    .view-section { display: none; }
-    .view-section.active { display: block; }
-  </style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <div class="brand">
-        <div class="logo-box">
-          <img src="aba.png" alt="Aba Logo" onerror="this.style.display='none'; document.getElementById('fallbackIcon').style.display='block';">
-          <i id="fallbackIcon" data-lucide="church" style="display:none; color:var(--accent-blue);"></i>
-        </div>
-        <div>
-          <h1 style="font-size:1.2rem; color:var(--text-heading);">Aba <span style="font-size:0.75rem; background:var(--accent-blue); color:#000; padding:2px 6px; border-radius:10px; vertical-align:middle;">2.0</span></h1>
-          <p style="font-size:0.75rem; color:var(--text-muted);">Igreja Missionária de Itagimirim</p>
-        </div>
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <div class="brand-avatar">
+        <img src="aba.png" alt="Logo" onerror="this.style.display='none';">
       </div>
-      <div id="userProfileHeader" style="display:none; align-items:center; gap:10px;">
-        <span id="txtUserName" style="font-size:0.85rem; font-weight:bold; color:var(--accent-blue);"></span>
-        <button class="btn-back" style="margin-bottom:0;" onclick="fazerLogout()"><i data-lucide="log-out"></i></button>
-      </div>
-    </header>
+      <div class="brand-title">Aba <span>2.0</span></div>
+    </div>
+    
+    <div id="headerProfileArea" style="display:none;">
+      <button class="user-quick-profile" onclick="switchView('viewPerfil')">
+        <span id="txtHeaderUserName">Membro</span>
+        <i data-lucide="user-circle"></i>
+      </button>
+    </div>
+  </header>
 
-    <!-- TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
-    <div id="viewAuth" class="view-section active animate-fade">
-      <div class="auth-card">
-        <h2 style="color:var(--text-heading); text-align:center; margin-bottom:8px;">Acessar o Aba</h2>
-        <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:20px;">Entre com sua conta ou cadastre-se</p>
+  <main class="app-container">
 
-        <form id="formAuth" onsubmit="tratarAutenticacao(event)">
-          <div class="form-group" id="groupNome" style="display:none;">
-            <label>Nome Completo</label>
-            <input type="text" id="iptNome" placeholder="Seu nome completo">
-          </div>
-          <div class="form-group">
-            <label>E-mail</label>
-            <input type="email" id="iptEmail" required placeholder="seu@email.com">
-          </div>
-          <div class="form-group">
-            <label>Senha</label>
-            <input type="password" id="iptSenha" required placeholder="******">
-          </div>
+    <section id="viewAuth" class="view-panel active">
+      <div class="card" style="max-width: 380px; margin: 40px auto;">
+        <h2 style="color:var(--text-heading); text-align:center; margin-bottom:6px;">Acessar o Aba</h2>
+        <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:20px;">Igreja Missionária de Itagimirim</p>
 
-          <button type="submit" class="btn-primary" id="btnSubmitAuth">Entrar</button>
+        <form onsubmit="handleAuthSubmit(event)">
+          <div class="form-group" id="groupNome" style="display:none; margin-bottom:12px;">
+            <label style="font-size:0.8rem; color:var(--text-muted);">Nome Completo</label>
+            <input type="text" id="iptNome" class="form-control" placeholder="Digite seu nome">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label style="font-size:0.8rem; color:var(--text-muted);">E-mail</label>
+            <input type="email" id="iptEmail" class="form-control" required placeholder="seu@email.com">
+          </div>
+          <div class="form-group" style="margin-bottom:18px;">
+            <label style="font-size:0.8rem; color:var(--text-muted);">Senha</label>
+            <input type="password" id="iptSenha" class="form-control" required placeholder="******">
+          </div>
+          <button type="submit" id="btnSubmitAuth" class="btn btn-primary" style="width:100%;">Entrar</button>
         </form>
 
-        <p style="text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted);">
-          <span id="txtToggleAuth">Não tem uma conta? <a href="#" onclick="alternarModoAuth(true)" style="color:var(--accent-blue);">Cadastre-se</a></span>
+        <p style="text-align:center; margin-top:16px; font-size:0.82rem; color:var(--text-muted);">
+          <span id="txtToggleAuth">Ainda não tem conta? <a href="#" onclick="toggleAuthMode(true)" style="color:var(--accent-blue);">Cadastre-se</a></span>
         </p>
       </div>
-    </div>
+    </section>
 
-    <!-- PORTAL PRINCIPAL (MENU DAS 8 ABAS) -->
-    <div id="viewPortal" class="view-section animate-fade">
-      <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:20px;">
-        <h2 style="color:var(--text-heading);">Graça e Paz! 👋</h2>
-        <p style="font-size:0.85rem; color:var(--text-muted);">Selecione um dos módulos abaixo para acessar.</p>
+    <section id="viewFeed" class="view-panel">
+      <div class="timeline-switcher">
+        <button class="timeline-btn active" id="tabForYou" onclick="setTimelineMode('foryou')">Para Você</button>
+        <button class="timeline-btn" id="tabSeguindo" onclick="setTimelineMode('seguindo')">Seguindo</button>
       </div>
 
-      <div class="portal-grid">
-        <div class="menu-card" onclick="navegarPara('viewAquiLugar')">
-          <div class="card-icon icon-purple"><i data-lucide="heart"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">1. Aqui é o seu Lugar</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">História e princípios.</p>
-          </div>
-        </div>
-
-        <div class="menu-card" onclick="navegarPara('viewSocial')">
-          <div class="card-icon icon-blue"><i data-lucide="message-square"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">2. Feed Social</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Comunidade e interações.</p>
-          </div>
-        </div>
-
-        <div class="menu-card" onclick="navegarPara('viewMidia')">
-          <div class="card-icon icon-red"><i data-lucide="video"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">3. Mídia & Lives</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Cultos ao vivo e vídeos.</p>
-          </div>
-        </div>
-
-        <div class="menu-card" onclick="navegarPara('viewChamada')">
-          <div class="card-icon icon-green"><i data-lucide="clipboard-check"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">4. Chamada & PDF</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Presença e relatórios PDF.</p>
-          </div>
-        </div>
-
-        <div class="menu-card" onclick="navegarPara('viewCalendario')">
-          <div class="card-icon icon-yellow"><i data-lucide="calendar"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">5. Calendário & Escalas</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Programação e eventos.</p>
-          </div>
-        </div>
-
-        <div class="menu-card" onclick="navegarPara('viewMembros')">
-          <div class="card-icon icon-blue"><i data-lucide="users"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">6. Membros & Ministérios</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Departamentos e líderes.</p>
-          </div>
-        </div>
-
-        <div class="menu-card" onclick="navegarPara('viewAdmin')">
-          <div class="card-icon icon-red"><i data-lucide="shield-check"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">7. Painel Admin</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Gestão de acessos.</p>
-          </div>
-        </div>
-
-        <div class="menu-card" onclick="navegarPara('viewTutorial')">
-          <div class="card-icon icon-purple"><i data-lucide="help-circle"></i></div>
-          <div>
-            <h3 style="font-size:0.95rem; color:var(--text-heading);">8. Tutorial de Uso</h3>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Guia rápido das abas.</p>
-          </div>
+      <div class="card">
+        <textarea id="iptPostContent" class="form-control" placeholder="Compartilhe uma palavra, versículo ou testemunho..."></textarea>
+        <div style="text-align:right; margin-top:10px;">
+          <button class="btn btn-primary" onclick="createPost()"><i data-lucide="send"></i> Publicar</button>
         </div>
       </div>
-    </div>
 
-    <!-- ABA 1: AQUI É O SEU LUGAR -->
-    <div id="viewAquiLugar" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <h2 style="color:var(--accent-blue); margin-bottom:10px;">⛪ Igreja Missionária de Itagimirim</h2>
-        <p style="color:var(--text-main); line-height:1.6; margin-bottom:15px;">
-          Nossa igreja é um lugar de acolhimento, fé e transformação em Itagimirim. Temos raízes firmadas nas Escrituras Sagradas e no compromisso com o evangelho de Jesus Cristo.
-        </p>
-        <h3 style="color:var(--text-heading); margin-top:20px; margin-bottom:10px;">Nossa Visão e Missão</h3>
-        <p style="color:var(--text-muted); line-height:1.5;">Proclamar a Palavra de Deus, fortalecer famílias e criar um ambiente de comunhão viva para todas as gerações.</p>
-      </div>
-    </div>
-
-    <!-- ABA 2: FEED SOCIAL -->
-    <div id="viewSocial" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <div class="form-group">
-          <textarea id="iptPostConteudo" rows="3" placeholder="Compartilhe uma palavra ou pedido de oração..."></textarea>
-        </div>
-        <button class="btn-primary" style="width:auto;" onclick="publicarPost()"><i data-lucide="send"></i> Publicar</button>
-      </div>
       <div id="feedPostsList">
-        <p style="text-align:center; color:var(--text-muted);">Carregando feed...</p>
+        <div class="card" style="text-align:center; color:var(--text-muted);">Carregando feed...</div>
       </div>
-    </div>
+    </section>
 
-    <!-- ABA 3: MÍDIA & TRANSMISSÃO DE LIVE -->
-    <div id="viewMidia" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <h3 style="color:var(--accent-red); margin-bottom:15px; display:flex; align-items:center; gap:8px;">
-          <i data-lucide="radio"></i> Transmissão Ao Vivo / Culto
+    <section id="viewCalendario" class="view-panel">
+      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
+
+      <div class="card">
+        <h3 style="color:var(--accent-yellow); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="calendar"></i> AgendaSemanal
         </h3>
-        <div class="video-container">
-          <!-- Transmissão ao vivo do YouTube -->
-          <iframe id="iframeLive" src="https://www.youtube.com/embed/live_stream?channel=UC_SEUCHANNEL_ID" allowfullscreen></iframe>
-        </div>
-        <p style="font-size:0.85rem; color:var(--text-muted);">Assista aos nossos cultos ao vivo ou acesse o histórico no nosso canal oficial.</p>
-      </div>
-    </div>
-
-    <!-- ABA 4: CHAMADA E RELATÓRIO PDF -->
-    <div id="viewChamada" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <h3 style="color:var(--accent-green); margin-bottom:15px;"><i data-lucide="clipboard-check"></i> Controle de Presença</h3>
-        <div class="form-group">
-          <label>Nome do Visitante ou Membro</label>
-          <input type="text" id="iptNomeChamada" placeholder="Digite o nome">
-        </div>
-        <button class="btn-primary btn-success" onclick="adicionarAChamada()"><i data-lucide="user-plus"></i> Registrar Presença</button>
-        <button class="btn-primary" style="margin-top:10px; background:var(--accent-purple); color:#fff;" onclick="gerarPDFChamada()"><i data-lucide="file-text"></i> Baixar Relatório em PDF</button>
+        <ul style="line-height:2; color:var(--text-main); font-size:0.9rem; list-style:none;">
+          <li style="border-bottom:1px solid var(--border-color); padding:8px 0;"><strong>🗓️ Domingo - 19:00:</strong> Culto de Celebração & Família</li>
+          <li style="border-bottom:1px solid var(--border-color); padding:8px 0;"><strong>🗓️ Quarta-feira - 19:30:</strong> Culto de Doutrina e Oração</li>
+          <li style="padding:8px 0;"><strong>🗓️ Sábado - 19:00:</strong> Encontro dos Jovens e Adolescentes</li>
+        </ul>
       </div>
 
-      <div class="box-card">
-        <h4 style="margin-bottom:12px; color:var(--text-heading);">Lista de Presentes Hoje:</h4>
-        <ul id="listaChamada" style="list-style:none; line-height:2;">
+      <div class="card">
+        <h3 style="color:var(--accent-blue); margin-bottom:12px;"><i data-lucide="users"></i> Escala de Servidores</h3>
+        <div style="font-size:0.9rem; line-height:1.8; color:var(--text-main);">
+          <p><strong>Louvor:</strong> Ministério Alpha</p>
+          <p><strong>Mídia & Som:</strong> Gabriel & Equipe</p>
+          <p><strong>Recepção:</strong> Irmãs Voluntárias</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewMidia" class="view-panel">
+      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
+      <div class="card">
+        <h3 style="color:var(--accent-red); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="radio"></i> Culto Ao Vivo
+        </h3>
+        <div class="responsive-video">
+          <iframe src="https://www.youtube.com/embed/live_stream?channel=UC_SEUCHANNEL_ID" allowfullscreen></iframe>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted);">Assista às nossas transmissões em tempo real diretamente de Itagimirim.</p>
+      </div>
+    </section>
+
+    <section id="viewChamada" class="view-panel">
+      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
+      
+      <div class="card">
+        <h3 style="color:var(--accent-green); margin-bottom:12px;"><i data-lucide="clipboard-check"></i> Registro de Presença</h3>
+        <input type="text" id="iptAttendanceName" class="form-control" placeholder="Nome do visitante ou membro" style="margin-bottom:10px;">
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-success" style="flex:1;" onclick="addAttendance()"><i data-lucide="user-plus"></i> Registrar</button>
+          <button class="btn btn-primary" style="flex:1; background:var(--accent-purple); color:#fff;" onclick="exportAttendancePDF()"><i data-lucide="file-text"></i> Baixar PDF</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-bottom:10px; color:var(--text-heading);">Membros/Visitantes Presentes:</h4>
+        <ul id="attendanceListRender" style="list-style:none; line-height:1.8; font-size:0.9rem;">
           <li style="color:var(--text-muted);">Nenhum registro até o momento.</li>
         </ul>
       </div>
-    </div>
+    </section>
 
-    <!-- ABA 5: CALENDÁRIO & ESCALAS -->
-    <div id="viewCalendario" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <h3 style="color:var(--accent-yellow); margin-bottom:15px;"><i data-lucide="calendar"></i> Programação Semanal</h3>
-        <ul style="line-height:2; color:var(--text-main); padding-left:20px;">
-          <li><strong>Domingo - 19:00:</strong> Culto da Família & Celebração</li>
-          <li><strong>Quarta-feira - 19:30:</strong> Culto de Ensino e Oração</li>
-          <li><strong>Sábado - 19:00:</strong> Encontro de Jovens e Adolescentes</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- ABA 6: MEMBROS & MINISTÉRIOS -->
-    <div id="viewMembros" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <h3 style="color:var(--accent-blue); margin-bottom:15px;"><i data-lucide="users"></i> Departamentos da Igreja</h3>
-        <p style="color:var(--text-muted); line-height:1.6;">
-          • <strong>Ministério de Louvor:</strong> Equipes de música e sonoplastia.<br>
-          • <strong>Mídia e Comunicação:</strong> Transmissão e redes sociais.<br>
-          • <strong>Ministério Infantil:</strong> Ensino e cuidado para as crianças.
+    <section id="viewHistoria" class="view-panel">
+      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
+      <div class="card">
+        <h2 style="color:var(--accent-blue); margin-bottom:10px;">⛪ Igreja Missionária Unida do Brasil</h2>
+        <p style="color:var(--text-main); font-size:0.95rem; line-height:1.6; margin-bottom:12px;">
+          A <strong>IMUB</strong> é uma denominação evangélica comprometida com o avivamento espiritual, a proclamação da Palavra e a ação social.
+        </p>
+        <p style="color:var(--text-main); font-size:0.95rem; line-height:1.6;">
+          Nossa igreja em <strong>Itagimirim</strong> tem o propósito de acolher pessoas, transformar vidas pelo Evangelho e edificar uma comunidade firme na fé e na comunhão.
         </p>
       </div>
-    </div>
+    </section>
 
-    <!-- ABA 7: PAINEL ADMIN -->
-    <div id="viewAdmin" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <h3 style="color:var(--accent-red); margin-bottom:15px;"><i data-lucide="shield-check"></i> Painel de Administração</h3>
-        <p style="color:var(--text-muted); margin-bottom:15px;">Gerencie e aprove o nível de acesso dos cadastrados:</p>
-        <div id="adminUsersList">
-          <p style="color:var(--text-muted);">Carregando usuários registrados...</p>
+    <section id="viewPerfil" class="view-panel">
+      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar ao Feed</button>
+
+      <div class="card profile-card-header">
+        <div class="avatar-large" id="profileInitials">U</div>
+        <h2 id="profileNameDisplay" style="color:var(--text-heading); font-size:1.3rem;">Usuário</h2>
+        <p id="profileEmailDisplay" style="font-size:0.82rem; color:var(--text-muted);">email@exemplo.com</p>
+        <span id="profileBadge" class="badge-role badge-membro">MEMBRO</span>
+
+        <div style="margin-top:18px; display:flex; justify-content:center; gap:10px;">
+          <button class="btn btn-outline" onclick="changeProfilePhoto()"><i data-lucide="camera"></i> Alterar Foto</button>
+          <button class="btn btn-danger" onclick="logout()"><i data-lucide="log-out"></i> Sair</button>
         </div>
       </div>
-    </div>
 
-    <!-- ABA 8: TUTORIAL DE USO (ACCORDION) -->
-    <div id="viewTutorial" class="view-section animate-fade">
-      <button class="btn-back" onclick="navegarPara('viewPortal')"><i data-lucide="arrow-left"></i> Voltar ao Portal</button>
-      <div class="box-card">
-        <h3 style="color:var(--accent-purple); margin-bottom:15px;"><i data-lucide="help-circle"></i> Tutorial e Guia do Aplicativo</h3>
-        
-        <div class="accordion-item">
-          <div class="accordion-header" onclick="toggleAccordion(this)">Como funciona a Chamada & PDF? <i data-lucide="chevron-down"></i></div>
-          <div class="accordion-body">Na aba 4, os obreiros podem adicionar nomes de presença no culto e clicar no botão 'Baixar Relatório em PDF' para salvar o arquivo no celular ou computador.</div>
-        </div>
-
-        <div class="accordion-item">
-          <div class="accordion-header" onclick="toggleAccordion(this)">Como publicar no Feed Social? <i data-lucide="chevron-down"></i></div>
-          <div class="accordion-body">Basta acessar a aba 2 (Feed Social), escrever sua mensagem ou versículo e clicar em 'Publicar'. Todos os irmãos cadastrados poderão ver e curtir.</div>
-        </div>
-
-        <div class="accordion-item">
-          <div class="accordion-header" onclick="toggleAccordion(this)">Como assistir às Lives ao vivo? <i data-lucide="chevron-down"></i></div>
-          <div class="accordion-body">Acesse a aba 3 (Mídia & Lives) no horário do culto para acompanhar a transmissão direto da igreja.</div>
+      <div class="card">
+        <h4 style="color:var(--text-heading); margin-bottom:10px;">Minhas Publicações</h4>
+        <div id="userPostsList">
+          <p style="font-size:0.85rem; color:var(--text-muted);">Carregando suas postagens...</p>
         </div>
       </div>
-    </div>
+    </section>
 
-  </div>
+    <section id="viewAdmin" class="view-panel">
+      <button class="btn btn-outline" style="margin-bottom:14px;" onclick="switchView('viewFeed')"><i data-lucide="arrow-left"></i> Voltar</button>
+      <div class="card">
+        <h3 style="color:var(--accent-red); margin-bottom:12px;"><i data-lucide="shield-check"></i> Gestão de Usuários e Cargos</h3>
+        <div id="adminUsersContainer">
+          <p style="color:var(--text-muted);">Carregando usuários...</p>
+        </div>
+      </div>
+    </section>
 
-  <script>
-    // As tuas credenciais exatas já configuradas:
-    const firebaseConfig = {
-      apiKey: "AIzaSyBzDM5VnLAKjUd6qfojvnZmDQsTB_D7cIs",
-      authDomain: "aba-app-828b4.firebaseapp.com",
-      databaseURL: "https://aba-app-828b4-default-rtdb.firebaseio.com",
-      projectId: "aba-app-828b4",
-      storageBucket: "aba-app-828b4.firebasestorage.app",
-      messagingSenderId: "943402703897",
-      appId: "1:943402703897:web:d3449445fb729e7424de88",
-      measurementId: "G-7Q5JEC40F6"
-    };
+  </main>
 
-    // Inicialização do Firebase
-    firebase.initializeApp(firebaseConfig);
-    if (firebase.analytics) { firebase.analytics(); }
-    lucide.createIcons();
+  <nav class="bottom-navigation" id="bottomNav" style="display:none;">
+    <button class="nav-link active" id="navFeed" onclick="switchView('viewFeed')">
+      <i data-lucide="home"></i>
+      <span>Feed</span>
+    </button>
+    <button class="nav-link" id="navCalendario" onclick="switchView('viewCalendario')">
+      <i data-lucide="calendar"></i>
+      <span>Agenda</span>
+    </button>
+    <button class="nav-link" id="navMidia" onclick="switchView('viewMidia')">
+      <i data-lucide="tv"></i>
+      <span>Lives</span>
+    </button>
+    <button class="nav-link" id="navChamada" onclick="switchView('viewChamada')">
+      <i data-lucide="clipboard-check"></i>
+      <span>Chamada</span>
+    </button>
+    <button class="nav-link" id="navHistoria" onclick="switchView('viewHistoria')">
+      <i data-lucide="heart"></i>
+      <span>Sobre</span>
+    </button>
+    <button class="nav-link" id="navPerfil" onclick="switchView('viewPerfil')">
+      <i data-lucide="user"></i>
+      <span>Perfil</span>
+    </button>
+    <button class="nav-link" id="btnNavAdmin" style="display:none; color:var(--accent-red);" onclick="switchView('viewAdmin')">
+      <i data-lucide="shield"></i>
+      <span>Admin</span>
+    </button>
+  </nav>
 
-    let usuarioAtual = null;
-    let isCadastro = false;
-    let listaPresenca = [];
-
-    // Lógica de Autenticação
-    function alternarModoAuth(modoCadastro) {
-      isCadastro = modoCadastro;
-      document.getElementById('groupNome').style.display = isCadastro ? 'block' : 'none';
-      document.getElementById('btnSubmitAuth').innerText = isCadastro ? 'Criar Conta' : 'Entrar';
-      document.getElementById('txtToggleAuth').innerHTML = isCadastro 
-        ? 'Já tem uma conta? <a href="#" onclick="alternarModoAuth(false)" style="color:var(--accent-blue);">Entre aqui</a>'
-        : 'Não tem uma conta? <a href="#" onclick="alternarModoAuth(true)" style="color:var(--accent-blue);">Cadastre-se</a>';
-    }
-
-    function tratarAutenticacao(e) {
-      e.preventDefault();
-      const email = document.getElementById('iptEmail').value;
-      const senha = document.getElementById('iptSenha').value;
-
-      if (isCadastro) {
-        const nome = document.getElementById('iptNome').value;
-        firebase.auth().createUserWithEmailAndPassword(email, senha)
-          .then(res => {
-            return firebase.database().ref('usuarios/' + res.user.uid).set({
-              nome: nome,
-              email: email,
-              nivelAcesso: 'membro'
-            });
-          })
-          .catch(err => alert('Erro no cadastro: ' + err.message));
-      } else {
-        firebase.auth().signInWithEmailAndPassword(email, senha)
-          .catch(err => alert('Erro no login: ' + err.message));
-      }
-    }
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        usuarioAtual = user;
-        document.getElementById('userProfileHeader').style.display = 'flex';
-        firebase.database().ref('usuarios/' + user.uid).once('value').then(snap => {
-          const dados = snap.val() || {};
-          usuarioAtual.nome = dados.nome || user.email;
-          document.getElementById('txtUserName').innerText = usuarioAtual.nome;
-        });
-        carregarPosts();
-        carregarUsuariosAdmin();
-        navegarPara('viewPortal');
-      } else {
-        usuarioAtual = null;
-        document.getElementById('userProfileHeader').style.display = 'none';
-        navegarPara('viewAuth');
-      }
-    });
-
-    function fazerLogout() { firebase.auth().signOut(); }
-
-    function navegarPara(viewId) {
-      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-      document.getElementById(viewId).classList.add('active');
-    }
-
-    // Lógica do Feed Social
-    function publicarPost() {
-      const conteudo = document.getElementById('iptPostConteudo').value.trim();
-      if (!conteudo) return alert('Digite uma mensagem!');
-
-      firebase.database().ref('posts').push({
-        autorNome: usuarioAtual.nome || 'Membro Aba',
-        texto: conteudo,
-        data: new Date().toLocaleString('pt-BR'),
-        curtidas: 0
-      }).then(() => {
-        document.getElementById('iptPostConteudo').value = '';
-      });
-    }
-
-    function carregarPosts() {
-      firebase.database().ref('posts').on('value', snap => {
-        const container = document.getElementById('feedPostsList');
-        container.innerHTML = '';
-        const data = snap.val();
-        if (!data) return container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Nenhum post publicado.</p>';
-
-        Object.keys(data).reverse().forEach(key => {
-          const post = data[key];
-          container.innerHTML += `
-            <div class="post-card">
-              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                <strong style="color:var(--text-heading);">${post.autorNome}</strong>
-                <span style="font-size:0.75rem; color:var(--text-muted);">${post.data}</span>
-              </div>
-              <p style="color:var(--text-main); line-height:1.4;">${post.texto}</p>
-            </div>
-          `;
-        });
-      });
-    }
-
-    // Lógica de Chamada e Geração de PDF
-    function adicionarAChamada() {
-      const nome = document.getElementById('iptNomeChamada').value.trim();
-      if (!nome) return alert('Digite um nome!');
-      listaPresenca.push(nome);
-      document.getElementById('iptNomeChamada').value = '';
-      atualizarListaChamada();
-    }
-
-    function atualizarListaChamada() {
-      const ul = document.getElementById('listaChamada');
-      ul.innerHTML = '';
-      listaPresenca.forEach((nome, i) => {
-        ul.innerHTML += `<li style="color:var(--text-heading);">${i+1}. ${nome}</li>`;
-      });
-    }
-
-    function gerarPDFChamada() {
-      if (listaPresenca.length === 0) return alert('A lista de chamada está vazia!');
-      
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      
-      doc.setFontSize(16);
-      doc.text("Igreja Missionária de Itagimirim", 20, 20);
-      doc.setFontSize(12);
-      doc.text("Relatório de Presença do Culto", 20, 30);
-      doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 38);
-      doc.text("--------------------------------------------------", 20, 44);
-
-      let y = 52;
-      listaPresenca.forEach((nome, index) => {
-        doc.text(`${index + 1}. ${nome}`, 20, y);
-        y += 8;
-      });
-
-      doc.save(`chamada-itagimirim-${new Date().toISOString().slice(0,10)}.pdf`);
-    }
-
-    // Lógica do Painel Admin
-    function carregarUsuariosAdmin() {
-      firebase.database().ref('usuarios').on('value', snap => {
-        const container = document.getElementById('adminUsersList');
-        container.innerHTML = '';
-        const data = snap.val() || {};
-        Object.keys(data).forEach(id => {
-          const u = data[id];
-          container.innerHTML += `
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding:10px 0;">
-              <div>
-                <strong style="color:var(--text-heading);">${u.nome || 'Sem nome'}</strong><br>
-                <span style="font-size:0.75rem; color:var(--text-muted);">${u.email}</span>
-              </div>
-              <span style="background:var(--border-color); padding:4px 8px; border-radius:6px; font-size:0.8rem;">${u.nivelAcesso || 'membro'}</span>
-            </div>
-          `;
-        });
-      });
-    }
-
-    // Sanfona/Accordion do Tutorial
-    function toggleAccordion(header) {
-      const body = header.nextElementSibling;
-      body.style.display = body.style.display === 'block' ? 'none' : 'block';
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
