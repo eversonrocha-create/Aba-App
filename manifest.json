@@ -1,1 +1,26 @@
-
+{
+  "short_name": "Aba 2.0",
+  "name": "Aba 2.0 - Igreja Missionária de Itagimirim",
+  "description": "Aplicativo oficial de membros, escalas, transmissões e gestão da Igreja Missionária de Itagimirim.",
+  "icons": [
+    {
+      "src": "aba.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "aba.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "./",
+  "lang": "pt-BR"
+}
